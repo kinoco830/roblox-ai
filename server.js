@@ -25,28 +25,33 @@ app.post("/chat", async (req, res) => {
             body: JSON.stringify({
                 model: "gpt-4o-mini",
                 messages: [
-                    { role: "system", content: "自然に会話するNPC。繰り返さない。" },
+                    { role: "system", content: "自然に会話するNPC" },
                     { role: "user", content: msg }
                 ],
-                temperature: 1.1,
+                temperature: 0.9,
                 max_tokens: 80
             })
         });
 
         const data = await ai.json();
-        let text = data.choices?.[0]?.message?.content?.trim();
+        console.log("AI RAW:", data);
 
-        if (!text) text = "ん？";
+        let text = data.choices?.[0]?.message?.content;
+
+        if (!text) {
+            text = "ん？";
+        }
 
         if (text === lastReply) {
-            text = "別の話して";
+            text = "ふーん";
         }
 
         lastReply = text;
         res.json({ reply: text });
 
     } catch (err) {
-        res.json({ reply: "今ちょっと重い" });
+        console.log("ERROR:", err);
+        res.json({ reply: "通信バグ" });
     }
 });
 
