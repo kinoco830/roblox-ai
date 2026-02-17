@@ -1,37 +1,18 @@
-import express from "express";
-import fetch from "node-fetch";
-
+const express = require("express");
 const app = express();
+
 app.use(express.json());
 
-// 環境変数から API キ���を取得
-const API_KEY = process.env.OPENAI_API_KEY;
-
 app.post("/chat", async (req, res) => {
-  const msg = req.body.message;
+    const msg = req.body.message || "こんにちは";
 
-  try {
-    const r = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + API_KEY
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: "ゲームのNPCとして話す" },
-          { role: "user", content: msg }
-        ]
-      })
-    });
+    const reply = "NPCの返事: " + msg;
 
-    const j = await r.json();
-    res.json({ reply: j.choices[0].message.content });
-
-  } catch (e) {
-    res.json({ reply: "AIエラー" });
-  }
+    res.json({ reply });
 });
 
-app.listen(3000, () => console.log("AI server running"));
+app.get("/", (req, res) => {
+    res.send("AI SERVER READY");
+});
+
+app.listen(3000, () => console.log("AI起動"));
