@@ -10,9 +10,10 @@ app.get("/", (req, res) => {
     res.send("AI SERVER READY");
 });
 
+let lastReply = "";
+
 app.post("/chat", async (req, res) => {
     const msg = req.body.message || "";
-    console.log("受信:", msg);
 
     try {
         const ai = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -24,13 +25,10 @@ app.post("/chat", async (req, res) => {
             body: JSON.stringify({
                 model: "gpt-4o-mini",
                 messages: [
-                    {
-                        role: "system",
-                        content: "あなたはRobloxのNPC。普通に自然に会話する。AIとは言わない。短めに返す。短気でもいいよ。"
-                    },
+                    { role: "system", content: "自然に会話するNPC。繰り返さない。" },
                     { role: "user", content: msg }
                 ],
-                temperature: 1.0,
+                temperature: 1.1,
                 max_tokens: 80
             })
         });
@@ -40,12 +38,15 @@ app.post("/chat", async (req, res) => {
 
         if (!text) text = "ん？";
 
-        console.log("AI:", text);
+        if (text === lastReply) {
+            text = "別の話して";
+        }
+
+        lastReply = text;
         res.json({ reply: text });
 
     } catch (err) {
-        console.log(err);
-        res.json({ reply: "聞こえなかった" });
+        res.json({ reply: "今ちょっと重い" });
     }
 });
 
