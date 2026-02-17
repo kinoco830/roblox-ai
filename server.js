@@ -1,60 +1,45 @@
 const express = require("express");
-const cors = require("cors");
 const fetch = require("node-fetch");
 
 const app = express();
-app.use(cors());
 app.use(express.json());
 
-app.get("/", (req, res) => {
-    res.send("AI SERVER READY");
-});
-
-let lastReply = "";
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 app.post("/chat", async (req, res) => {
-    const msg = req.body.message || "";
-
     try {
-        const ai = await fetch("https://api.openai.com/v1/chat/completions", {
+        const userMsg = req.body.message || "";
+
+        const response = await fetch("https://api.openai.com/v1/chat/completions", {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + process.env.OPENAI_API_KEY
+                "Authorization": `Bearer ${OPENAI_API_KEY}`,
+                "Content-Type": "application/json"
             },
             body: JSON.stringify({
                 model: "gpt-4o-mini",
                 messages: [
-                    { role: "system", content: "自然に会話するNPC" },
-                    { role: "user", content: msg }
-                ],
-                temperature: 0.9,
-                max_tokens: 80
+                    { role: "system", content: "あなたはRobloxのNPCです。短く自然に会話してください。" },
+                    { role: "user", content: userMsg }
+                ]
             })
         });
 
-        const data = await ai.json();
-        console.log("AI RAW:", data);
+        const data = await response.json();
+        const reply = data.choices?.[0]?.message?.content || "...";
 
-        let text = data.choices?.[0]?.message?.content;
-
-        if (!text) {
-            text = "ん？";
-        }
-
-        if (text === lastReply) {
-            text = "ふーん";
-        }
-
-        lastReply = text;
-        res.json({ reply: text });
+        res.json({ reply });
 
     } catch (err) {
-        console.log("ERROR:", err);
-        res.json({ reply: "通信バグ" });
+        console.log(err);
+        res.json({ reply: "..." });
     }
 });
 
+app.get("/", (req, res) => {
+    res.send("AI server running");
+});
+
 app.listen(3000, () => {
-    console.log("AI SERVER READY");
+    console.log("AIサーバー準備完了");
 });
